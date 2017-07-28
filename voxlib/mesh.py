@@ -1,9 +1,3 @@
-__author__ = 'Peter Hofmann'
-
-
-import math
-
-
 def calculate_scale_and_shift(mesh, resolution):
     """
 
@@ -27,7 +21,6 @@ def calculate_scale_and_shift(mesh, resolution):
                 maxs[index] = point[index]
     shift = [-minimum for minimum in mins]
     scale = float(resolution - 1) / (max(maxs[0] - mins[0], maxs[1] - mins[1]))
-    # bounding_box = [resolution, resolution, math.ceil((maxs[2] - mins[2]) * scale)]
     return scale, shift, triangle_count
 
 
