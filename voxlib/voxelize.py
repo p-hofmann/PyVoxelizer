@@ -102,19 +102,20 @@ def get_neighbours(position):
     for x in range_p:
         for y in range_p:
             for z in range_p:
-                taxi_dist = abs(x) + abs(y) + abs(z)
+                # if abs(x) + abs(y) + abs(z) > 2:
+                #     continue
                 position_tmp = (position[0] + x, position[1] + y, position[2] + z)
-                if position_tmp == position:
-                    continue
-                yield taxi_dist, position_tmp
+                # if position_tmp == position:
+                #     continue
+                yield position_tmp
 
 
 def get_intersecting_voxels_depth_first(vertex_1, vertex_2, vertex_3):
     """
 
-    @type vertex_1: (float, float, float)
-    @type vertex_2: (float, float, float)
-    @type vertex_3: (float, float, float)
+    @type vertex_1: numpy.ndarray
+    @type vertex_2: numpy.ndarray
+    @type vertex_3: numpy.ndarray
 
     @rtype:
     """
@@ -126,19 +127,27 @@ def get_intersecting_voxels_depth_first(vertex_1, vertex_2, vertex_3):
     stack.add(seed)
     tmp = np.array([0.0, 0.0, 0.0])
     tmp_triangle = Triangle()
+    tmp_vertex_1 = np.array([0.0, 0.0, 0.0])
+    tmp_vertex_2 = np.array([0.0, 0.0, 0.0])
+    tmp_vertex_3 = np.array([0.0, 0.0, 0.0])
+    tmp_triangle.set(tmp_vertex_1, tmp_vertex_2, tmp_vertex_3)
     while len(stack) > 0:
         position = stack.pop()
         searched.add(position)
         tmp[0] = 0.5 + position[0]
         tmp[1] = 0.5 + position[1]
         tmp[2] = 0.5 + position[2]
-        tmp_triangle.set(
-            np.subtract(vertex_1, tmp),
-            np.subtract(vertex_2, tmp),
-            np.subtract(vertex_3, tmp))
+        np.subtract(vertex_1, tmp, tmp_vertex_1)
+        np.subtract(vertex_2, tmp, tmp_vertex_2)
+        np.subtract(vertex_3, tmp, tmp_vertex_3)
+        # tmp_triangle.set(
+        #     np.subtract(vertex_1, tmp),
+        #     np.subtract(vertex_2, tmp),
+        #     np.subtract(vertex_3, tmp))
         is_inside = t_c_intersection(tmp_triangle) == INSIDE
         if is_inside:
-            for taxi_dist, neighbour in get_neighbours(position):
+            neighbours = list(get_neighbours(position))
+            for neighbour in neighbours:
                 if neighbour not in searched:
                     stack.add(neighbour)
             yield position

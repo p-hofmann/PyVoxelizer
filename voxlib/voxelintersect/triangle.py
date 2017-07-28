@@ -9,6 +9,13 @@ OUTSIDE = 1
 EPS = 10e-5
 
 
+def cross_product(a, b):
+    return (
+        a[1] * b[2] - a[2] * b[1],
+        -a[0] * b[2] + a[2] * b[0],
+        a[0] * b[1] - a[1] * b[0])
+
+
 def sign3(point):
     sign_code = 0
 
@@ -82,7 +89,7 @@ def face_plane(point):
     """
     Which of the six face-plane(s) is point P outside of?
 
-    @type point: numpy.ndarray
+    @type point: numpy.ndarray | (float, float, float)
     """
     face_plane_code = 0
     if point[0] > .5:
@@ -133,26 +140,26 @@ def bevel_2d(point):
     return edge_plane_code
 
 
-def bevel_3d(p):
+def bevel_3d(point):
     """
     Which of the eight corner plane(s) is point P outside of?
     """
     corner_plane_code = 0
-    if (p[0] + p[1] + p[2]) > 1.5:
+    if (point[0] + point[1] + point[2]) > 1.5:
         corner_plane_code |= 0x01
-    if (p[0] + p[1] - p[2]) > 1.5:
+    if (point[0] + point[1] - point[2]) > 1.5:
         corner_plane_code |= 0x02
-    if (p[0] - p[1] + p[2]) > 1.5:
+    if (point[0] - point[1] + point[2]) > 1.5:
         corner_plane_code |= 0x04
-    if (p[0] - p[1] - p[2]) > 1.5:
+    if (point[0] - point[1] - point[2]) > 1.5:
         corner_plane_code |= 0x08
-    if (-p[0] + p[1] + p[2]) > 1.5:
+    if (-point[0] + point[1] + point[2]) > 1.5:
         corner_plane_code |= 0x10
-    if (-p[0] + p[1] - p[2]) > 1.5:
+    if (-point[0] + point[1] - point[2]) > 1.5:
         corner_plane_code |= 0x20
-    if (-p[0] - p[1] + p[2]) > 1.5:
+    if (-point[0] - point[1] + point[2]) > 1.5:
         corner_plane_code |= 0x40
-    if (-p[0] - p[1] - p[2]) > 1.5:
+    if (-point[0] - point[1] - point[2]) > 1.5:
         corner_plane_code |= 0x80
     return corner_plane_code
 
@@ -167,7 +174,7 @@ def check_point(point_a, point_b, alpha, mask):
     plane_point_y = lerp(alpha, point_a[1], point_b[1])
     plane_point_z = lerp(alpha, point_a[2], point_b[2])
 
-    plane_point = np.array([plane_point_x, plane_point_y, plane_point_z])
+    plane_point = (plane_point_x, plane_point_y, plane_point_z)
     return face_plane(plane_point) & mask
 
 
@@ -232,7 +239,7 @@ def point_triangle_intersection(p, t):
     # SUB(t.v1,    p, vect1h);
     vect1h = np.subtract(t.vertex_1, p)
     # CROSS(vect12, vect1h, cross12_1p)
-    cross12_1p = np.cross(vect12, vect1h)
+    cross12_1p = cross_product(vect12, vect1h)
     # sign12 = SIGN3(cross12_1p);      # /* Extract X,Y,Z signs as 0..7 or 0...63 integer */
     sign12 = sign3(cross12_1p)
 
@@ -241,7 +248,7 @@ def point_triangle_intersection(p, t):
     # SUB(t.v2,    p, vect2h);
     vect2h = np.subtract(t.vertex_2, p)
     # CROSS(vect23, vect2h, cross23_2p)
-    cross23_2p = np.cross(vect23, vect2h)
+    cross23_2p = cross_product(vect23, vect2h)
     # sign23 = SIGN3(cross23_2p);
     sign23 = sign3(cross23_2p)
 
@@ -250,7 +257,7 @@ def point_triangle_intersection(p, t):
     # SUB(t.v3,    p, vect3h);
     vect3h = np.subtract(t.vertex_3, p)
     # CROSS(vect31, vect3h, cross31_3p)
-    cross31_3p = np.cross(vect31, vect3h)
+    cross31_3p = cross_product(vect31, vect3h)
     # sign31 = SIGN3(cross31_3p);
     sign31 = sign3(cross31_3p)
 
@@ -297,7 +304,7 @@ def t_c_intersection(triangle):
     # /* If all three vertexes were outside of one or more face-planes, */
     # /* return immediately with a trivial rejection!                   */
 
-    if (v1_test & v2_test & v3_test) != 0:
+    if (v1_test & v2_test & v3_test) != INSIDE:
         return OUTSIDE
 
     # /* Now do the same trivial rejection test for the 12 edge planes */
@@ -305,7 +312,7 @@ def t_c_intersection(triangle):
     v1_test |= bevel_2d(triangle.vertex_1) << 8
     v2_test |= bevel_2d(triangle.vertex_2) << 8
     v3_test |= bevel_2d(triangle.vertex_3) << 8
-    if (v1_test & v2_test & v3_test) != 0:
+    if (v1_test & v2_test & v3_test) != INSIDE:
         return OUTSIDE
 
     # /* Now do the same trivial rejection test for the 8 corner planes */
@@ -313,7 +320,7 @@ def t_c_intersection(triangle):
     v1_test |= bevel_3d(triangle.vertex_1) << 24
     v2_test |= bevel_3d(triangle.vertex_2) << 24
     v3_test |= bevel_3d(triangle.vertex_3) << 24
-    if (v1_test & v2_test & v3_test) != 0:
+    if (v1_test & v2_test & v3_test) != INSIDE:
         return OUTSIDE
 
     # /* If vertex 1 and 2, as a pair, cannot be trivially rejected */
@@ -350,7 +357,7 @@ def t_c_intersection(triangle):
     # SUB(t.vertex_1,t.vertex_3,vect13);
     vect13 = np.subtract(triangle.vertex_1, triangle.vertex_3)
     # CROSS(vect12,vect13,norm)
-    norm = np.cross(vect12, vect13)
+    norm = cross_product(vect12, vect13)
 
     # /* The normal vector "norm" X,Y,Z components are the coefficients */
     # /* of the triangles AX + BY + CZ + D = 0 plane equation.  If we   */
@@ -365,7 +372,7 @@ def t_c_intersection(triangle):
 
     # /* if one of the diagonals is parallel to the plane, the other will intersect the plane */
     denom = norm[0] + norm[1] + norm[2]
-    hitpp = np.array([0.0, 0.0, 0.0])
+    hitpp = [0.0, 0.0, 0.0]
     if abs(denom) > EPS:
         # /* skip parallel diagonals to the plane; division by 0 can occur */
         hitpp[0] = hitpp[1] = hitpp[2] = d / denom
@@ -374,7 +381,7 @@ def t_c_intersection(triangle):
                 return INSIDE
 
     denom = norm[0] + norm[1] - norm[2]
-    hitpn = np.array([0.0, 0.0, 0.0])
+    hitpn = [0.0, 0.0, 0.0]
     if abs(denom) > EPS:
         hitpn[0] = hitpn[1] = d / denom
         hitpn[2] = -hitpn[0]
@@ -383,7 +390,7 @@ def t_c_intersection(triangle):
                 return INSIDE
 
     denom = norm[0] - norm[1] + norm[2]
-    hitnp = np.array([0.0, 0.0, 0.0])
+    hitnp = [0.0, 0.0, 0.0]
     if abs(denom) > EPS:
         hitnp[0] = hitnp[2] = d / denom
         hitnp[1] = -hitnp[0]
@@ -392,7 +399,7 @@ def t_c_intersection(triangle):
                 return INSIDE
 
     denom = norm[0] - norm[1] - norm[2]
-    hitnn = np.array([0.0, 0.0, 0.0])
+    hitnn = [0.0, 0.0, 0.0]
     if abs(denom) > EPS:
         hitnn[0] = d / denom
         hitnn[1] = hitnn[2] = -hitnn[0]

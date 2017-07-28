@@ -1,3 +1,6 @@
+import numpy as np
+
+
 def calculate_scale_and_shift(mesh, resolution):
     """
 
@@ -35,14 +38,14 @@ def scale_and_shift_triangle(triangle, scale, shift):
     """
     shifted_triangle = []
     for point in triangle:
-        new_point = [0, 0, 0]
+        new_point = np.array([.0, .0, .0])
         for i in range(3):
             new_point[i] = (point[i] + shift[i]) * scale
-        shifted_triangle.append(tuple(new_point))
+        shifted_triangle.append(new_point)
     del triangle
-    if not contains_duplicates(shifted_triangle):
-        return shifted_triangle
-    return None
+    # if not contains_duplicates(shifted_triangle):
+    return shifted_triangle
+    # return None
 
 
 def contains_duplicates(list_of_points):
