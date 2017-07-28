@@ -3,9 +3,13 @@ __author__ = 'Peter Hofmann'
 import numpy as np
 import os
 from struct import unpack
+from .defaultreader import DefaultReader
 
 
-class STLReader(object):
+class StlReader(DefaultReader):
+
+    def __init__(self):
+        self._facets = []
 
     @staticmethod
     def read_binary(file_path):
@@ -68,9 +72,9 @@ class STLReader(object):
         """
         assert input_stream.readline().strip().startswith("outer loop")
         triangle = (
-            STLReader.parse_askii_verticle(input_stream),
-            STLReader.parse_askii_verticle(input_stream),
-            STLReader.parse_askii_verticle(input_stream))
+            StlReader.parse_askii_verticle(input_stream),
+            StlReader.parse_askii_verticle(input_stream),
+            StlReader.parse_askii_verticle(input_stream))
         assert input_stream.readline().strip().startswith("endloop")
         return triangle
 
@@ -89,7 +93,7 @@ class STLReader(object):
         line = input_stream.readline().strip()
         while not line.startswith("endsolid"):
             _, _, normal_x, normal_y, normal_z = line.split(' ')
-            triangle = STLReader.parse_askii_triangle(input_stream)
+            triangle = StlReader.parse_askii_triangle(input_stream)
             assert input_stream.readline().strip().startswith("endfacet")
             yield (normal_x, normal_y, normal_z), triangle
             line = input_stream.readline().strip()
@@ -114,7 +118,7 @@ class STLReader(object):
             assert line.startswith("solid"), line
             _, name = line.split(' ')
             # print(line)
-            yield name, STLReader.parse_askii_list_of_facets(input_stream)
+            yield name, StlReader.parse_askii_list_of_facets(input_stream)
             line = input_stream.readline()
         input_stream.close()
 
@@ -126,7 +130,7 @@ class STLReader(object):
         @rtype: collections.Iterable[(str, collections.Iterable[((float, float, float), ((float, float, float), (float, float, float), (float, float, float)))]])]
         """
         assert os.path.exists(file_path), "Bad path: {}".format(file_path)
-        return STLReader.parse_askii_solids(open(file_path, 'r'))
+        return StlReader.parse_askii_solids(open(file_path, 'r'))
 
     @staticmethod
     def _is_ascii_stl(file_path):
@@ -143,18 +147,35 @@ class STLReader(object):
             else:
                 return False
 
-    @staticmethod
-    def read_stl_verticies(file_path):
+    def read(self, file_path):
         """
 
         @type file_path: str
-        @rtype: collections.Iterable[(float, float, float), (float, float, float), (float, float, float)]
+        @rtype: None
         """
-        if STLReader._is_ascii_stl(file_path):
-            for name, facets in STLReader.read_askii_stl(file_path):
+        self._facets = []
+        if StlReader._is_ascii_stl(file_path):
+            for name, facets in StlReader.read_askii_stl(file_path):
                 for normal, (v1, v2, v3) in facets:
-                    yield (v1, v2, v3)
+                    self._facets.append((np.array(v1), np.array(v2), np.array(v3)))
         else:
-            head, n, v1, v2, v3 = STLReader.read_binary(file_path)
-            for i, j, k in zip(v1, v2, v3):
-                yield (tuple(i), tuple(j), tuple(k))
+            head, n, v1, v2, v3 = StlReader.read_binary(file_path)
+            for facet in zip(v1, v2, v3):
+                self._facets.append(facet)
+                # yield (tuple(i), tuple(j), tuple(k))
+
+    def get_facets(self):
+        """
+
+        @rtype: (numpy.ndarray, numpy.ndarray, numpy.ndarray)
+        """
+        for facet in self._facets:
+            yield facet
+
+    def has_triangular_facets(self):
+        """
+
+        @rtype: bool
+        """
+        # todo: is this always the case?
+        return True
