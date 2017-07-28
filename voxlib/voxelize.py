@@ -3,9 +3,11 @@ __author__ = 'Peter Hofmann'
 import argparse
 import sys
 import math
+
 import numpy as np
+
 from .common.progressbar import print_progress_bar
-from .stlreader import STLReader
+from voxlib.meshreader.meshreader import MeshReader
 from .voxelintersect.triangle import t_c_intersection, INSIDE, Triangle
 from .mesh import calculate_scale_and_shift, scale_and_shift_triangle
 
@@ -144,10 +146,10 @@ def get_intersecting_voxels_depth_first(vertex_1, vertex_2, vertex_3):
 
 
 def voxelize(file_path, resolution):
-    list_of_triangles = set(STLReader.read_stl_verticies(file_path))
+    mesh_reader = MeshReader()
+    mesh_reader.read(file_path)
+    list_of_triangles = list(mesh_reader.get_facets())
     scale, shift, triangle_count = calculate_scale_and_shift(list_of_triangles, resolution)
-
-    list_of_triangles = set(STLReader.read_stl_verticies(file_path))
     progress_counter = 0
     voxels = set()
     bounding_box = BoundaryBox()
