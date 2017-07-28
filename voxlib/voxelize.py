@@ -148,6 +148,9 @@ def get_intersecting_voxels_depth_first(vertex_1, vertex_2, vertex_3):
 def voxelize(file_path, resolution):
     mesh_reader = MeshReader()
     mesh_reader.read(file_path)
+    if not mesh_reader.has_triangular_facets():
+        raise NotImplementedError("Unsupported polygonal face elements. Only triangular facets supported.")
+
     list_of_triangles = list(mesh_reader.get_facets())
     scale, shift, triangle_count = calculate_scale_and_shift(list_of_triangles, resolution)
     progress_counter = 0
