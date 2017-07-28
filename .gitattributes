@@ -1,0 +1,10 @@
+# Unit test
+unittests/ export-ignore
+
+# git
+.gitattributes export-ignore
+.gitignore export-ignore
+
+# circleci continuous integration
+circle.yml export-ignore
+tox.ini export-ignore
