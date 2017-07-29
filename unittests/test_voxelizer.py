@@ -15,6 +15,6 @@ class PerimeterTest(unittest.TestCase):
     def test_voxelize(self):
         for file_path in self.input_file_paths:
             print(os.path.basename(file_path))
-            triangles = set(voxelize(file_path, 100))
+            triangles = set(voxelize(file_path, 50))
             self.assertGreaterEqual(len(triangles), 2)
         # print(x, y, z)

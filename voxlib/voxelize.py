@@ -8,7 +8,7 @@ import numpy as np
 
 from .common.progressbar import print_progress_bar
 from voxlib.meshreader.meshreader import MeshReader
-from .voxelintersect.triangle import t_c_intersection, INSIDE, Triangle
+from .voxelintersect.triangle import Triangle, t_c_intersection, INSIDE, vertexes_to_c_triangle, triangle_lib
 from .mesh import calculate_scale_and_shift, scale_and_shift_triangle
 
 
@@ -68,34 +68,6 @@ class BoundaryBox(object):
             self.maximum[2] = math.ceil(max([vertex_1[2], vertex_2[2], vertex_3[2], self.maximum[2]]))
 
 
-def get_intersecting_voxels_brute_force(vertex_1, vertex_2, vertex_3):
-    """
-
-    @type vertex_1: (float, float, float)
-    @type vertex_2: (float, float, float)
-    @type vertex_3: (float, float, float)
-
-    @rtype:
-    """
-    boundary_box = BoundaryBox()
-    boundary_box.from_vertexes(vertex_1, vertex_2, vertex_3)
-
-    tmp = np.array([0.0, 0.0, 0.0])
-    tmp_triangle = Triangle()
-    for x in range(boundary_box.minimum[0], boundary_box.maximum[0]+1):
-        tmp[0] = 0.5 + x
-        for y in range(boundary_box.minimum[1], boundary_box.maximum[1]+1):
-            tmp[1] = 0.5 + y
-            for z in range(boundary_box.minimum[2], boundary_box.maximum[2]+1):
-                tmp[2] = 0.5 + z
-                tmp_triangle.set(
-                    np.subtract(vertex_1, tmp),
-                    np.subtract(vertex_2, tmp),
-                    np.subtract(vertex_3, tmp))
-                if t_c_intersection(tmp_triangle) == 0:
-                    yield x, y, z
-
-
 # @staticmethod
 def get_neighbours(position):
     range_p = [-1, 0, 1]
@@ -126,11 +98,12 @@ def get_intersecting_voxels_depth_first(vertex_1, vertex_2, vertex_3):
     stack = set()
     stack.add(seed)
     tmp = np.array([0.0, 0.0, 0.0])
-    tmp_triangle = Triangle()
     tmp_vertex_1 = np.array([0.0, 0.0, 0.0])
     tmp_vertex_2 = np.array([0.0, 0.0, 0.0])
     tmp_vertex_3 = np.array([0.0, 0.0, 0.0])
-    tmp_triangle.set(tmp_vertex_1, tmp_vertex_2, tmp_vertex_3)
+    if not triangle_lib:
+        tmp_triangle = Triangle()
+        tmp_triangle.set(tmp_vertex_1, tmp_vertex_2, tmp_vertex_3)
     while len(stack) > 0:
         position = stack.pop()
         searched.add(position)
@@ -140,11 +113,14 @@ def get_intersecting_voxels_depth_first(vertex_1, vertex_2, vertex_3):
         np.subtract(vertex_1, tmp, tmp_vertex_1)
         np.subtract(vertex_2, tmp, tmp_vertex_2)
         np.subtract(vertex_3, tmp, tmp_vertex_3)
-        # tmp_triangle.set(
-        #     np.subtract(vertex_1, tmp),
-        #     np.subtract(vertex_2, tmp),
-        #     np.subtract(vertex_3, tmp))
-        is_inside = t_c_intersection(tmp_triangle) == INSIDE
+        if triangle_lib:
+            is_inside = triangle_lib.t_c_intersection(vertexes_to_c_triangle(
+                tmp_vertex_1,
+                tmp_vertex_2,
+                tmp_vertex_3
+                )) == INSIDE
+        else:
+            is_inside = t_c_intersection(tmp_triangle) == INSIDE
         if is_inside:
             neighbours = list(get_neighbours(position))
             for neighbour in neighbours:

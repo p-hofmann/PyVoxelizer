@@ -1,7 +1,34 @@
 __author__ = 'Peter Hofmann'
 __source__ = 'https://github.com/erich666/GraphicsGems/blob/master/gemsiii/triangleCube.c'
 
+import os
 import numpy as np
+from ctypes import cdll, Structure, c_float
+
+
+class Point3(Structure):
+    _fields_ = [
+        ("x", c_float),
+        ("y", c_float),
+        ("z", c_float)
+        ]
+
+
+class Triangle3(Structure):
+    _fields_ = [
+        ("v1", Point3),
+        ("v2", Point3),
+        ("v3", Point3)
+        ]
+
+
+triangle_lib = None
+script_dir = os.path.dirname(os.path.realpath(__file__))
+file_path_library = os.path.join(script_dir, 'triangleCube.so')
+if os.path.exists(file_path_library):
+    triangle_lib = cdll.LoadLibrary(file_path_library)
+else:
+    exit(1)
 
 
 INSIDE = 0
@@ -44,18 +71,18 @@ def lerp(alpha, a, b):
 class Triangle(object):
     """
 
-    @type vertex_1: numpy.ndarray
-    @type vertex_2: numpy.ndarray
-    @type vertex_3: numpy.ndarray
+    @type v1: numpy.ndarray
+    @type v2: numpy.ndarray
+    @type v3: numpy.ndarray
     """
 
     def __init__(self):
         """
 
         """
-        self.vertex_1 = 0
-        self.vertex_2 = 0
-        self.vertex_3 = 0
+        self.v1 = 0
+        self.v2 = 0
+        self.v3 = 0
 
     def set(self, vertex_1, vertex_2, vertex_3):
         """
@@ -64,25 +91,33 @@ class Triangle(object):
         @type vertex_2: numpy.ndarray
         @type vertex_3: numpy.ndarray
         """
-        self.vertex_1 = vertex_1
-        self.vertex_2 = vertex_2
-        self.vertex_3 = vertex_3
+        self.v1 = vertex_1
+        self.v2 = vertex_2
+        self.v3 = vertex_3
 
     def min(self, index):
-        if self.vertex_1[index] < self.vertex_2[index] and self.vertex_1[index] < self.vertex_3[index]:
-            return self.vertex_1[index]
-        elif self.vertex_2[index] < self.vertex_3[index]:
-            return self.vertex_2[index]
+        if self.v1[index] < self.v2[index] and self.v1[index] < self.v3[index]:
+            return self.v1[index]
+        elif self.v2[index] < self.v3[index]:
+            return self.v2[index]
         else:
-            return self.vertex_3[index]
+            return self.v3[index]
 
     def max(self, index):
-        if self.vertex_1[index] > self.vertex_2[index] and self.vertex_1[index] > self.vertex_3[index]:
-            return self.vertex_1[index]
-        elif self.vertex_2[index] > self.vertex_3[index]:
-            return self.vertex_2[index]
+        if self.v1[index] > self.v2[index] and self.v1[index] > self.v3[index]:
+            return self.v1[index]
+        elif self.v2[index] > self.v3[index]:
+            return self.v2[index]
         else:
-            return self.vertex_3[index]
+            return self.v3[index]
+
+
+def vertexes_to_c_triangle(vertex_1, vertex_2, vertex_3):
+    return Triangle3(
+        Point3(vertex_1[0], vertex_1[1], vertex_1[2]),
+        Point3(vertex_2[0], vertex_2[1], vertex_2[2]),
+        Point3(vertex_3[0], vertex_3[1], vertex_3[2])
+        )
 
 
 def face_plane(point):
@@ -235,27 +270,27 @@ def point_triangle_intersection(p, t):
     # /* to the outside of this triangle side.                                    */
 
     # SUB(t.v1, t.v2, vect12)
-    vect12 = np.subtract(t.vertex_1, t.vertex_2)
+    vect12 = np.subtract(t.v1, t.v2)
     # SUB(t.v1,    p, vect1h);
-    vect1h = np.subtract(t.vertex_1, p)
+    vect1h = np.subtract(t.v1, p)
     # CROSS(vect12, vect1h, cross12_1p)
     cross12_1p = cross_product(vect12, vect1h)
     # sign12 = SIGN3(cross12_1p);      # /* Extract X,Y,Z signs as 0..7 or 0...63 integer */
     sign12 = sign3(cross12_1p)
 
     # SUB(t.v2, t.v3, vect23)
-    vect23 = np.subtract(t.vertex_2, t.vertex_3)
+    vect23 = np.subtract(t.v2, t.v3)
     # SUB(t.v2,    p, vect2h);
-    vect2h = np.subtract(t.vertex_2, p)
+    vect2h = np.subtract(t.v2, p)
     # CROSS(vect23, vect2h, cross23_2p)
     cross23_2p = cross_product(vect23, vect2h)
     # sign23 = SIGN3(cross23_2p);
     sign23 = sign3(cross23_2p)
 
     # SUB(t.v3, t.v1, vect31)
-    vect31 = np.subtract(t.vertex_3, t.vertex_1)
+    vect31 = np.subtract(t.v3, t.v1)
     # SUB(t.v3,    p, vect3h);
-    vect3h = np.subtract(t.vertex_3, p)
+    vect3h = np.subtract(t.v3, p)
     # CROSS(vect31, vect3h, cross31_3p)
     cross31_3p = cross_product(vect31, vect3h)
     # sign31 = SIGN3(cross31_3p);
@@ -291,9 +326,9 @@ def t_c_intersection(triangle):
     # /* First compare all three vertexes with all six face-planes */
     # /* If any vertex is inside the cube, return immediately!     */
 
-    v1_test = face_plane(triangle.vertex_1)
-    v2_test = face_plane(triangle.vertex_2)
-    v3_test = face_plane(triangle.vertex_3)
+    v1_test = face_plane(triangle.v1)
+    v2_test = face_plane(triangle.v2)
+    v3_test = face_plane(triangle.v3)
     if v1_test == INSIDE:
         return INSIDE
     if v2_test == INSIDE:
@@ -309,17 +344,17 @@ def t_c_intersection(triangle):
 
     # /* Now do the same trivial rejection test for the 12 edge planes */
 
-    v1_test |= bevel_2d(triangle.vertex_1) << 8
-    v2_test |= bevel_2d(triangle.vertex_2) << 8
-    v3_test |= bevel_2d(triangle.vertex_3) << 8
+    v1_test |= bevel_2d(triangle.v1) << 8
+    v2_test |= bevel_2d(triangle.v2) << 8
+    v3_test |= bevel_2d(triangle.v3) << 8
     if (v1_test & v2_test & v3_test) != INSIDE:
         return OUTSIDE
 
     # /* Now do the same trivial rejection test for the 8 corner planes */
 
-    v1_test |= bevel_3d(triangle.vertex_1) << 24
-    v2_test |= bevel_3d(triangle.vertex_2) << 24
-    v3_test |= bevel_3d(triangle.vertex_3) << 24
+    v1_test |= bevel_3d(triangle.v1) << 24
+    v2_test |= bevel_3d(triangle.v2) << 24
+    v3_test |= bevel_3d(triangle.v3) << 24
     if (v1_test & v2_test & v3_test) != INSIDE:
         return OUTSIDE
 
@@ -331,13 +366,13 @@ def t_c_intersection(triangle):
     # /* each triangle edge need be tested.                         */
 
     if (v1_test & v2_test) == 0:
-        if check_line(triangle.vertex_1, triangle.vertex_2, v1_test | v2_test) == INSIDE:
+        if check_line(triangle.v1, triangle.v2, v1_test | v2_test) == INSIDE:
             return INSIDE
     if (v1_test & v3_test) == 0:
-        if check_line(triangle.vertex_1, triangle.vertex_3, v1_test | v3_test) == INSIDE:
+        if check_line(triangle.v1, triangle.v3, v1_test | v3_test) == INSIDE:
             return INSIDE
     if (v2_test & v3_test) == 0:
-        if check_line(triangle.vertex_2, triangle.vertex_3, v2_test | v3_test) == INSIDE:
+        if check_line(triangle.v2, triangle.v3, v2_test | v3_test) == INSIDE:
             return INSIDE
 
     # /* By now, we know that the triangle is not off to any side,     */
@@ -353,9 +388,9 @@ def t_c_intersection(triangle):
     # /* two triangle side vectors to compute the normal vector.       */
 
     # SUB(t.vertex_1,t.vertex_2,vect12);
-    vect12 = np.subtract(triangle.vertex_1, triangle.vertex_2)
+    vect12 = np.subtract(triangle.v1, triangle.v2)
     # SUB(t.vertex_1,t.vertex_3,vect13);
-    vect13 = np.subtract(triangle.vertex_1, triangle.vertex_3)
+    vect13 = np.subtract(triangle.v1, triangle.v3)
     # CROSS(vect12,vect13,norm)
     norm = cross_product(vect12, vect13)
 
@@ -368,7 +403,7 @@ def t_c_intersection(triangle):
     # /* doing a point/triangle intersection.                           */
     # /* Do this for all four diagonals.                                */
 
-    d = norm[0] * triangle.vertex_1[0] + norm[1] * triangle.vertex_1[1] + norm[2] * triangle.vertex_1[2]
+    d = norm[0] * triangle.v1[0] + norm[1] * triangle.v1[1] + norm[2] * triangle.v1[2]
 
     # /* if one of the diagonals is parallel to the plane, the other will intersect the plane */
     denom = norm[0] + norm[1] + norm[2]
