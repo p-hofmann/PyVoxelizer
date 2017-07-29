@@ -2,7 +2,7 @@
 # https://stackoverflow.com/questions/3173320/text-progress-bar-in-the-console
 import sys
 
-def print_progress_bar(iteration, total, prefix='', suffix='', decimals=1, length=20, fill='█'):
+def print_progress_bar(iteration, total, prefix='', suffix='', decimals=1, length=20, fill='='):
     """
     Call in a loop to create terminal progress bar
     @params:
