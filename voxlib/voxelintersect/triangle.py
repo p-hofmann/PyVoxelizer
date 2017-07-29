@@ -1,6 +1,4 @@
-__author__ = 'Peter Hofmann'
-__source__ = 'https://github.com/erich666/GraphicsGems/blob/master/gemsiii/triangleCube.c'
-
+import sys
 import os
 import numpy as np
 from ctypes import cdll, Structure, c_float
@@ -25,11 +23,16 @@ class Triangle3(Structure):
 triangle_lib = None
 script_dir = os.path.dirname(os.path.realpath(__file__))
 file_path_library = os.path.join(script_dir, 'triangleCube.so')
-if os.path.exists(file_path_library):
+if sys.platform == 'linux' and os.path.exists(file_path_library):
     triangle_lib = cdll.LoadLibrary(file_path_library)
 else:
-    exit(1)
+    triangle_lib = None
 
+
+"""
+    Code conversion into python from:
+    'https://github.com/erich666/GraphicsGems/blob/master/gemsiii/triangleCube.c'
+"""
 
 INSIDE = 0
 OUTSIDE = 1
