@@ -1,4 +1,8 @@
-/* https://github.com/erich666/GraphicsGems/blob/master/gemsiii/triangleCube.c */
+/* Original file:
+ * https://github.com/erich666/GraphicsGems/blob/master/gemsiii/triangleCube.c
+ *
+ * Some optimizations have been made for voxilisation.
+ */
 
 #include <math.h>
 
@@ -51,11 +55,11 @@ long face_plane(Point3 p)
 long outcode;
 
    outcode = 0;
-   if (p.x >  .5) outcode |= 0x01;
+   if (p.x >=  .5) outcode |= 0x01;  // > .5
    if (p.x < -.5) outcode |= 0x02;
-   if (p.y >  .5) outcode |= 0x04;
+   if (p.y >=  .5) outcode |= 0x04;  // > .5
    if (p.y < -.5) outcode |= 0x08;
-   if (p.z >  .5) outcode |= 0x10;
+   if (p.z >=  .5) outcode |= 0x10;  // > .5
    if (p.z < -.5) outcode |= 0x20;
    return(outcode);
 }
@@ -69,16 +73,16 @@ long bevel_2d(Point3 p)
 long outcode;
 
    outcode = 0;
-   if ( p.x + p.y > 1.0) outcode |= 0x001;
-   if ( p.x - p.y > 1.0) outcode |= 0x002;
+   if ( p.x + p.y >= 1.0) outcode |= 0x001;  // > 1.0
+   if ( p.x - p.y >= 1.0) outcode |= 0x002;  // > 1.0
    if (-p.x + p.y > 1.0) outcode |= 0x004;
    if (-p.x - p.y > 1.0) outcode |= 0x008;
-   if ( p.x + p.z > 1.0) outcode |= 0x010;
-   if ( p.x - p.z > 1.0) outcode |= 0x020;
+   if ( p.x + p.z >= 1.0) outcode |= 0x010;  // > 1.0
+   if ( p.x - p.z >= 1.0) outcode |= 0x020;  // > 1.0
    if (-p.x + p.z > 1.0) outcode |= 0x040;
    if (-p.x - p.z > 1.0) outcode |= 0x080;
-   if ( p.y + p.z > 1.0) outcode |= 0x100;
-   if ( p.y - p.z > 1.0) outcode |= 0x200;
+   if ( p.y + p.z >= 1.0) outcode |= 0x100;  // > 1.0
+   if ( p.y - p.z >= 1.0) outcode |= 0x200;  // > 1.0
    if (-p.y + p.z > 1.0) outcode |= 0x400;
    if (-p.y - p.z > 1.0) outcode |= 0x800;
    return(outcode);
@@ -93,10 +97,10 @@ long bevel_3d(Point3 p)
 long outcode;
 
    outcode = 0;
-   if (( p.x + p.y + p.z) > 1.5) outcode |= 0x01;
-   if (( p.x + p.y - p.z) > 1.5) outcode |= 0x02;
-   if (( p.x - p.y + p.z) > 1.5) outcode |= 0x04;
-   if (( p.x - p.y - p.z) > 1.5) outcode |= 0x08;
+   if (( p.x + p.y + p.z) >= 1.5) outcode |= 0x01;  // > 1.5
+   if (( p.x + p.y - p.z) >= 1.5) outcode |= 0x02;  // > 1.5
+   if (( p.x - p.y + p.z) >= 1.5) outcode |= 0x04;  // > 1.5
+   if (( p.x - p.y - p.z) >= 1.5) outcode |= 0x08;  // > 1.5
    if ((-p.x + p.y + p.z) > 1.5) outcode |= 0x10;
    if ((-p.x + p.y - p.z) > 1.5) outcode |= 0x20;
    if ((-p.x - p.y + p.z) > 1.5) outcode |= 0x40;
