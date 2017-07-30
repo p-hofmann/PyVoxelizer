@@ -7,112 +7,34 @@ from voxlib.voxelize import voxelize
 
 class PerimeterTest(unittest.TestCase):
     input_file_paths = [
-        "./input/cube_corner.stl",
+        "./input/cube.stl",
+        "./input/cube_diagonals.stl",
+        "./input/cube_diagonals_axis.stl",
         # "./input/Dragon_2.5.stl",
         # "./input/Scaffold.obj"
     ]
 
-    expected = {
-        (-3, -1, 3),
-        (-3, -2, 3),
-        (-3, 0, 1),
-        (1, -3, 1),
-        (-2, -3, -1),
-        (-1, -3, -1),
-        (-2, -3, -2),
-        (-2, -2, -2),
-        (-2, -1, -1),
-        (-1, -2, -1),
-        (-2, -2, -1),
-        (1, -3, 3),
-        (0, -3, 0),
-        (0, -3, 2),
-        (2, -2, 3),
-        (-2, 2, 3),
-        (-1, 1, 3),
-        (2, -3, 3),
-        (-2, 1, 3),
-        (-2, 1, 1),
-        (-3, 1, 2),
-        (-3, -3, -2),
-        (-3, -3, -1),
-        (1, -2, 2),
-        (1, -1, 2),
-        (-3, -3, 1),
-        (-3, -3, 3),
-        (-2, 0, 0),
-        (0, 0, 3),
-        (-1, 0, 2),
-        (-2, 0, 2),
-        (-3, 2, 3),
-        (0, -2, 0),
-        (-1, -1, 3),
-        (-1, -2, 3),
-        (-2, -2, 3),
-        (-1, -3, 3),
-        (-2, -3, 3),
-        (-2, -1, 3),
-        (0, -1, 2),
-        (0, -2, 2),
-        (-2, -2, 1),
-        (-1, -2, 1),
-        (-2, -1, 1),
-        (-1, -3, 1),
-        (-2, -3, 1),
-        (-1, -1, 1),
-        (-3, -1, 0),
-        (-3, -2, 0),
-        (-3, 0, 2),
-        (-3, -2, 2),
-        (-3, -1, 2),
-        (-3, -2, -1),
-        (-3, -1, -1),
-        (-3, -2, -2),
-        (-3, 0, 0),
-        (1, -3, 2),
-        (0, -3, 1),
-        (0, -3, 3),
-        (-1, 1, 2),
-        (-2, 1, 2),
-        (2, -3, 2),
-        (-3, 1, 1),
-        (-2, 2, 2),
-        (2, -2, 2),
-        (-3, 1, 3),
-        (1, -2, 1),
-        (1, -1, 3),
-        (1, -2, 3),
-        (-3, -3, 0),
-        (-3, -3, 2),
-        (-2, 0, 1),
-        (-1, 0, 1),
-        (-1, 0, 3),
-        (-2, 0, 3),
-        (-3, 2, 2),
-        (0, 0, 2),
-        (0, -1, 1),
-        (0, -2, 1),
-        (-2, -3, 2),
-        (-1, -3, 2),
-        (0, -2, 3),
-        (0, -1, 3),
-        (-1, -1, 2),
-        (-2, -1, 2),
-        (-1, -2, 2),
-        (-1, -3, 0),
-        (-2, -3, 0),
-        (-2, -2, 2),
-        (-2, -1, 0),
-        (-1, -2, 0),
-        (-2, -2, 0),
-        (-1, -1, 0),
-        (-3, -1, 1),
-        (-3, -2, 1),
-        (-3, 0, 3)}
+    def test_cube(self):
+        file_path = self.input_file_paths[0]
+        print(os.path.basename(file_path))
+        resolution = 11
+        voxels = set(voxelize(file_path, resolution))
+        self.assertEqual(len(voxels), 602)
+        print(len(voxels))
 
-    def test_voxelize(self):
-        for file_path in self.input_file_paths:
-            print(os.path.basename(file_path))
-            voxels = set(voxelize(file_path, 5))
-            # self.assertGreaterEqual(len(voxels), 2)
-            self.assertSetEqual(self.expected, voxels)
+    def test_diagonals(self):
+        file_path = self.input_file_paths[1]
+        print(os.path.basename(file_path))
+        resolution = 11
+        voxels = set(voxelize(file_path, resolution))
+        # self.assertEqual(len(voxels), 602)
+        print(len(voxels))
+
+    def test_diagonals_axis(self):
+        file_path = self.input_file_paths[2]
+        print(os.path.basename(file_path))
+        resolution = 11
+        voxels = set(voxelize(file_path, resolution))
+        # self.assertEqual(len(voxels), 602)
+        print(len(voxels))
+

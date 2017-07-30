@@ -1,0 +1,92 @@
+solid 0_0_0_cube_corner
+  facet normal 0.0 -1.0 0.0
+    outer loop
+      vertex 0.0 0.0 0.0
+      vertex 1.0 0.0 0.0
+      vertex 0.0 0.0 1.0
+    endloop
+  endfacet
+  facet normal 0.0 0.0 -1.0
+    outer loop
+      vertex 0.0 0.0 0.0
+      vertex 0.0 1.0 0.0
+      vertex 1.0 0.0 0.0
+    endloop
+  endfacet
+  facet normal -1.0 0.0 0.0
+    outer loop
+      vertex 0.0 0.0 0.0
+      vertex 0.0 0.0 1.0
+      vertex 0.0 1.0 0.0
+    endloop
+  endfacet
+endsolid
+solid 1_1_1_cube_corner
+  facet normal 0.0 -1.0 0.0
+    outer loop
+      vertex 1.0 1.0 1.0
+      vertex 0.0 1.0 1.0
+      vertex 1.0 1.0 0.0
+    endloop
+  endfacet
+  facet normal 0.0 0.0 -1.0
+    outer loop
+      vertex 1.0 1.0 1.0
+      vertex 0.0 1.0 1.0
+      vertex 1.0 0.0 1.0
+    endloop
+  endfacet
+  facet normal -1.0 0.0 0.0
+    outer loop
+      vertex 1.0 1.0 1.0
+      vertex 1.0 1.0 0.0
+      vertex 1.0 0.0 1.0
+    endloop
+  endfacet
+endsolid
+solid mantle
+  facet normal 0.0 0.0 0.0
+    outer loop
+      vertex 0 0 1
+      vertex 1 0 0
+      vertex 1 0 1
+    endloop
+  endfacet
+  facet normal 0.0 0.0 0.0
+    outer loop
+      vertex 1 0 0
+      vertex 1 0 1
+      vertex 1 1 0
+    endloop
+  endfacet
+  facet normal 0.0 0.0 0.0
+    outer loop
+      vertex 0 1 0
+      vertex 0 1 1
+      vertex 1 1 0
+    endloop
+  endfacet
+  facet normal 0.0 0.0 0.0
+    outer loop
+      vertex 0 1 1
+      vertex 0 0 1
+      vertex 0 1 0
+    endloop
+  endfacet
+endsolid
+solid top_bottom
+  facet normal 0.0 0.0 0.0
+    outer loop
+      vertex 0 0 1
+      vertex 0 1 1
+      vertex 1 0 1
+    endloop
+  endfacet
+  facet normal 0.0 0.0 0.0
+    outer loop
+      vertex 1 0 0
+      vertex 1 1 0
+      vertex 0 1 0
+    endloop
+  endfacet
+endsolid
