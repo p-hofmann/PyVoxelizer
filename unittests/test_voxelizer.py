@@ -10,7 +10,7 @@ class PerimeterTest(unittest.TestCase):
         "./input/cube.stl",
         "./input/cube_diagonals.stl",
         "./input/cube_diagonals_axis.stl",
-        # "./input/Dragon_2.5.stl",
+        # "./input/Dragon_2_5.stl",
         # "./input/Scaffold.obj"
     ]
 
@@ -27,7 +27,7 @@ class PerimeterTest(unittest.TestCase):
         print(os.path.basename(file_path))
         resolution = 11
         voxels = set(voxelize(file_path, resolution))
-        # self.assertEqual(len(voxels), 602)
+        self.assertEqual(len(voxels), 890)
         print(len(voxels))
 
     def test_diagonals_axis(self):
@@ -35,6 +35,5 @@ class PerimeterTest(unittest.TestCase):
         print(os.path.basename(file_path))
         resolution = 11
         voxels = set(voxelize(file_path, resolution))
-        # self.assertEqual(len(voxels), 602)
+        self.assertEqual(len(voxels), 730)
         print(len(voxels))
-
