@@ -116,7 +116,7 @@ class StlReader(DefaultReader):
         while line:
             line = line.strip()
             assert line.startswith("solid"), line
-            _, name = line.split(' ')
+            _, name = line.split(' ', 1)
             # print(line)
             yield name, StlReader.parse_askii_list_of_facets(input_stream)
             line = input_stream.readline()
