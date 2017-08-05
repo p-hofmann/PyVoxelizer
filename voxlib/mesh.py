@@ -1,17 +1,18 @@
 import numpy as np
 
+# functions are loosly based
 
-def calculate_scale_and_shift(mesh, resolution):
+
+def get_scale_and_shift(mesh, resolution):
     """
 
-    @type mesh: collections.Iterable[(float, float, float), (float, float, float), (float, float, float)]
+    @type mesh: list[((float, float, float), (float, float, float), (float, float, float))]
     @type resolution: int
     @rtype: (float, list[float], int)
     """
     triangle_count = 0
-    mins = None
-    maxs = None
-    # allPoints = [item for sublist in mesh for item in sublist]
+    mins = []
+    maxs = []
     for triangle in mesh:
         triangle_count += 1
         if mins is None:
@@ -43,10 +44,4 @@ def scale_and_shift_triangle(triangle, scale, shift):
             new_point[i] = (point[i] + shift[i]) * scale
         shifted_triangle.append(new_point)
     del triangle
-    # if not contains_duplicates(shifted_triangle):
     return shifted_triangle
-    # return None
-
-
-def contains_duplicates(list_of_points):
-    return len(set(list_of_points)) != len(list_of_points)

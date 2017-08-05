@@ -1,5 +1,3 @@
-__author__ = 'Peter Hofmann'
-
 import argparse
 import sys
 import math
@@ -7,9 +5,9 @@ import math
 import numpy as np
 
 from .common.progressbar import print_progress_bar
-from voxlib.meshreader.meshreader import MeshReader
+from meshlib.meshreader import MeshReader
 from .voxelintersect.triangle import Triangle, t_c_intersection, INSIDE, vertexes_to_c_triangle, triangle_lib
-from .mesh import calculate_scale_and_shift, scale_and_shift_triangle
+from .mesh import get_scale_and_shift, scale_and_shift_triangle
 
 
 class BoundaryBox(object):
@@ -24,9 +22,9 @@ class BoundaryBox(object):
     def get_center(self):
         assert self.minimum, "BoundaryBox not initialized"
         return [
-            int((self.maximum[0] + self.minimum[0])/2),
-            int((self.maximum[1] + self.minimum[1])/2),
-            int((self.maximum[2] + self.minimum[2])/2)
+            int((self.maximum[0] + self.minimum[0])/2.0),
+            int((self.maximum[1] + self.minimum[1])/2.0),
+            int((self.maximum[2] + self.minimum[2])/2.0)
             ]
 
     def from_triangle(self, triangle):
@@ -66,23 +64,6 @@ class BoundaryBox(object):
             self.maximum[0] = math.ceil(max([vertex_1[0], vertex_2[0], vertex_3[0], self.maximum[0]]))
             self.maximum[1] = math.ceil(max([vertex_1[1], vertex_2[1], vertex_3[1], self.maximum[1]]))
             self.maximum[2] = math.ceil(max([vertex_1[2], vertex_2[2], vertex_3[2], self.maximum[2]]))
-
-
-# @staticmethod
-def get_neighbours(position):
-    range_p = [-1, 0, 1]
-    for x in range_p:
-        for y in range_p:
-            for z in range_p:
-                # if abs(x) + abs(y) + abs(z) > 2:
-                #     continue
-                position_tmp = (position[0] + x, position[1] + y, position[2] + z)
-                # if position_tmp == position:
-                #     continue
-                yield position_tmp
-
-
-range_p = [-1, 0, 1]
 
 
 def get_intersecting_voxels_depth_first(vertex_1, vertex_2, vertex_3):
@@ -170,7 +151,7 @@ def voxelize(file_path, resolution):
         raise NotImplementedError("Unsupported polygonal face elements. Only triangular facets supported.")
 
     list_of_triangles = list(mesh_reader.get_facets())
-    scale, shift, triangle_count = calculate_scale_and_shift(list_of_triangles, resolution)
+    scale, shift, triangle_count = get_scale_and_shift(list_of_triangles, resolution)
     progress_counter = 0
     voxels = set()
     bounding_box = BoundaryBox()

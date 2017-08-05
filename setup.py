@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 
 from setuptools import setup, find_packages
+from voxlib import __version__ as version, __author__ as author
 
 setup(
     name='PyVoxelizer',
-    version='0.0.1',
+    version=version,
     description='A python converter of 3D model into voxels',
-    author='Peter Hofmann',
+    author=author,
     author_email='',
     url='',
     packages=find_packages(exclude=('unittest', '__pycache__')),
