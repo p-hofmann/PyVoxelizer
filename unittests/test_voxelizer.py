@@ -1,5 +1,3 @@
-__author__ = 'Peter Hofmann'
-
 import unittest
 import os
 from voxlib.voxelize import voxelize
@@ -19,21 +17,24 @@ class PerimeterTest(unittest.TestCase):
         print(os.path.basename(file_path))
         resolution = 11
         voxels = set(voxelize(file_path, resolution))
-        self.assertEqual(len(voxels), 602)
         print(len(voxels))
+        self.assertEqual(len(voxels), 602)
 
     def test_diagonals(self):
         file_path = self.input_file_paths[1]
         print(os.path.basename(file_path))
         resolution = 11
         voxels = set(voxelize(file_path, resolution))
-        self.assertEqual(len(voxels), 890)
         print(len(voxels))
+        self.assertEqual(len(voxels), 890)
 
     def test_diagonals_axis(self):
         file_path = self.input_file_paths[2]
         print(os.path.basename(file_path))
         resolution = 11
         voxels = set(voxelize(file_path, resolution))
-        self.assertEqual(len(voxels), 730)
         print(len(voxels))
+        self.assertEqual(len(voxels), 730)
+
+if __name__ == '__main__':
+    unittest.main()
