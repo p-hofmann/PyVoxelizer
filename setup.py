@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 from voxlib import __version__ as version, __author__ as author
 
 setup(
-    name='PyVoxelizer',
+    name='voxlib',
     version=version,
     description='A python converter of 3D model into voxels',
     author=author,
