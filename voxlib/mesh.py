@@ -11,13 +11,10 @@ def get_scale_and_shift(mesh, resolution):
     @rtype: (float, list[float], int)
     """
     triangle_count = 0
-    mins = []
-    maxs = []
+    mins = list(mesh[0][0])
+    maxs = list(mesh[0][0])
     for triangle in mesh:
         triangle_count += 1
-        if mins is None:
-            mins = list(triangle[0])
-            maxs = list(triangle[0])
         for index, point in enumerate(triangle):
             if point[index] < mins[index]:
                 mins[index] = point[index]
