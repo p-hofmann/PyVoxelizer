@@ -172,7 +172,7 @@ def voxelize(file_path, resolution, progress_bar=None):
 
 if __name__ == '__main__':
     # parse cli args
-    parser = argparse.ArgumentParser(description='STL file to voxels converter')
+    parser = argparse.ArgumentParser(description='stl/obj file to voxels converter')
     parser.add_argument('input')
     parser.add_argument('resolution', type=int)
     args = parser.parse_args()
