@@ -144,7 +144,9 @@ def get_intersecting_voxels_depth_first(vertex_1, vertex_2, vertex_3):
     return result_positions
 
 
-def voxelize(file_path, resolution):
+def voxelize(file_path, resolution, progress_bar=None):
+    if not progress_bar:
+        progress_bar = print_progress_bar
     mesh_reader = MeshReader()
     mesh_reader.read(file_path)
     if not mesh_reader.has_triangular_facets():
@@ -157,7 +159,7 @@ def voxelize(file_path, resolution):
     bounding_box = BoundaryBox()
     for triangle in list_of_triangles:
         progress_counter += 1
-        print_progress_bar(progress_counter, triangle_count, prefix="Voxelize: ")
+        progress_bar(progress_counter, triangle_count, prefix="Voxelize: ")
 
         (vertex_1, vertex_2, vertex_3) = scale_and_shift_triangle(triangle, scale, shift)
         bounding_box.from_vertexes(vertex_1, vertex_2, vertex_3)
