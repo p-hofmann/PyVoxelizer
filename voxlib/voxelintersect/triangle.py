@@ -130,15 +130,15 @@ def face_plane(point):
     @type point: numpy.ndarray | (float, float, float)
     """
     face_plane_code = 0
-    if point[0] >= .5:
+    if point[0] > .5:
         face_plane_code |= 0x01
     if point[0] < -.5:
         face_plane_code |= 0x02
-    if point[1] >= .5:
+    if point[1] > .5:
         face_plane_code |= 0x04
     if point[1] < -.5:
         face_plane_code |= 0x08
-    if point[2] >= .5:
+    if point[2] > .5:
         face_plane_code |= 0x10
     if point[2] < -.5:
         face_plane_code |= 0x20
@@ -151,27 +151,27 @@ def bevel_2d(point):
     Which of the twelve edge plane(s) is point P outside of?
     """
     edge_plane_code = 0
-    if point[0] + point[1] >= 1.0:
+    if point[0] + point[1] > 1.0:
         edge_plane_code |= 0x001
-    if point[0] - point[1] >= 1.0:
+    if point[0] - point[1] > 1.0:
         edge_plane_code |= 0x002
     if -point[0] + point[1] > 1.0:
         edge_plane_code |= 0x004
     if -point[0] - point[1] > 1.0:
         edge_plane_code |= 0x008
 
-    if point[0] + point[2] >= 1.0:
+    if point[0] + point[2] > 1.0:
         edge_plane_code |= 0x010
-    if point[0] - point[2] >= 1.0:
+    if point[0] - point[2] > 1.0:
         edge_plane_code |= 0x020
     if -point[0] + point[2] > 1.0:
         edge_plane_code |= 0x040
     if -point[0] - point[2] > 1.0:
         edge_plane_code |= 0x080
 
-    if point[1] + point[2] >= 1.0:
+    if point[1] + point[2] > 1.0:
         edge_plane_code |= 0x100
-    if point[1] - point[2] >= 1.0:
+    if point[1] - point[2] > 1.0:
         edge_plane_code |= 0x200
     if -point[1] + point[2] > 1.0:
         edge_plane_code |= 0x400
@@ -185,13 +185,13 @@ def bevel_3d(point):
     Which of the eight corner plane(s) is point P outside of?
     """
     corner_plane_code = 0
-    if (point[0] + point[1] + point[2]) >= 1.5:
+    if (point[0] + point[1] + point[2]) > 1.5:
         corner_plane_code |= 0x01
-    if (point[0] + point[1] - point[2]) >= 1.5:
+    if (point[0] + point[1] - point[2]) > 1.5:
         corner_plane_code |= 0x02
-    if (point[0] - point[1] + point[2]) >= 1.5:
+    if (point[0] - point[1] + point[2]) > 1.5:
         corner_plane_code |= 0x04
-    if (point[0] - point[1] - point[2]) >= 1.5:
+    if (point[0] - point[1] - point[2]) > 1.5:
         corner_plane_code |= 0x08
     if (-point[0] + point[1] + point[2]) > 1.5:
         corner_plane_code |= 0x10
