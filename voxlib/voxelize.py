@@ -1,7 +1,6 @@
 import argparse
 import sys
 import math
-
 import numpy as np
 
 from .common.progressbar import print_progress_bar
@@ -145,10 +144,19 @@ def get_intersecting_voxels_depth_first(vertex_1, vertex_2, vertex_3):
 
 
 def voxelize(file_path, resolution, progress_bar=None):
+    """
+
+    @type file_path: str
+    @type resolution: int
+    @type progress_bar: any
+    """
     if not progress_bar:
         progress_bar = print_progress_bar
     mesh_reader = MeshReader()
-    mesh_reader.read(file_path)
+    if file_path.endswith('.zip'):
+        mesh_reader.read_archive(file_path)
+    else:
+        mesh_reader.read(file_path)
     if not mesh_reader.has_triangular_facets():
         raise NotImplementedError("Unsupported polygonal face elements. Only triangular facets supported.")
 
@@ -176,5 +184,5 @@ if __name__ == '__main__':
     parser.add_argument('input')
     parser.add_argument('resolution', type=int)
     args = parser.parse_args()
-    for x, y, z in voxelize(args.input, args.resolution):
-        sys.stdout.write("{}\t{}\t{}\n".format(x, y, z))
+    for pos_x, pos_y, pos_z in voxelize(args.input, args.resolution):
+        sys.stdout.write("{}\t{}\t{}\n".format(pos_x, pos_y, pos_z))
