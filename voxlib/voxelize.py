@@ -77,6 +77,7 @@ def get_intersecting_voxels_depth_first(vertex_1, vertex_2, vertex_3):
 
     @rtype: list[(int, int, int)]
     """
+    c_lib = triangle_lib
     result_positions = []
     tmp_triangle = None
     searched = set()
@@ -94,7 +95,7 @@ def get_intersecting_voxels_depth_first(vertex_1, vertex_2, vertex_3):
     tmp_vertex_1 = np.array([0.0, 0.0, 0.0])
     tmp_vertex_2 = np.array([0.0, 0.0, 0.0])
     tmp_vertex_3 = np.array([0.0, 0.0, 0.0])
-    if not triangle_lib:
+    if not c_lib:
         tmp_triangle = Triangle()
         tmp_triangle.set(tmp_vertex_1, tmp_vertex_2, tmp_vertex_3)
     while len(stack) > 0:
@@ -108,11 +109,17 @@ def get_intersecting_voxels_depth_first(vertex_1, vertex_2, vertex_3):
         np.subtract(vertex_1, tmp, tmp_vertex_1)
         np.subtract(vertex_2, tmp, tmp_vertex_2)
         np.subtract(vertex_3, tmp, tmp_vertex_3)
-        if triangle_lib:
-            is_inside = triangle_lib.t_c_intersection(
-                vertexes_to_c_triangle(tmp_vertex_1, tmp_vertex_2, tmp_vertex_3)) == INSIDE
-        else:
+
+        try:
+            if c_lib:
+                is_inside = c_lib.t_c_intersection(
+                    vertexes_to_c_triangle(tmp_vertex_1, tmp_vertex_2, tmp_vertex_3)) == INSIDE
+            else:
+                is_inside = t_c_intersection(tmp_triangle) == INSIDE
+        except Exception:
+            c_lib = None
             is_inside = t_c_intersection(tmp_triangle) == INSIDE
+
         if is_inside:
             result_positions.append(position)
 

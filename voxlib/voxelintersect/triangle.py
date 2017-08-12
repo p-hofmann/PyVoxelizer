@@ -22,10 +22,16 @@ class Triangle3(Structure):
 
 triangle_lib = None
 script_dir = os.path.dirname(os.path.realpath(__file__))
-file_path_library = os.path.join(script_dir, 'triangleCube_unix.so')
-if sys.platform == 'linux' and os.path.exists(file_path_library):
-    triangle_lib = cdll.LoadLibrary(file_path_library)
-else:
+try:
+    if sys.platform.startswith('linux') and sys.maxsize == 9223372036854775807:
+        file_path_library = os.path.join(script_dir, 'triangleCube_linux64.so')
+        if os.path.exists(file_path_library):
+            triangle_lib = cdll.LoadLibrary(file_path_library)
+    elif sys.platform.startswith("win") and sys.maxsize == 2147483647:
+        file_path_library = os.path.join(script_dir, 'triangleCube_win32.so')
+        if os.path.exists(file_path_library):
+            triangle_lib = cdll.LoadLibrary(file_path_library)
+except OSError:
     triangle_lib = None
 
 
