@@ -1,5 +1,6 @@
 /* Original file:
  * https://github.com/erich666/GraphicsGems/blob/master/gemsiii/triangleCube.c
+ * Some optimisations for use in voxelisation have been made
  */
 
 #include <math.h>
@@ -9,7 +10,7 @@
 #ifdef OLD_TEST
 	#define SIGN3( A ) (((A).x<0)?4:0 | ((A).y<0)?2:0 | ((A).z<0)?1:0)
 #else
-	#define EPS 10e-5
+	#define EPS 1e-5
 	#define SIGN3( A ) \
 	  (((A).x < EPS) ? 4 : 0 | ((A).x > -EPS) ? 32 : 0 | \
 	   ((A).y < EPS) ? 2 : 0 | ((A).y > -EPS) ? 16 : 0 | \
@@ -53,11 +54,11 @@ long face_plane(Point3 p)
 long outcode;
 
    outcode = 0;
-   if (p.x >  .5) outcode |= 0x01;  // > .5
+   if (p.x >=  .5) outcode |= 0x01;  // > .5
    if (p.x < -.5) outcode |= 0x02;
-   if (p.y >  .5) outcode |= 0x04;  // > .5
+   if (p.y >=  .5) outcode |= 0x04;  // > .5
    if (p.y < -.5) outcode |= 0x08;
-   if (p.z >  .5) outcode |= 0x10;  // > .5
+   if (p.z >=  .5) outcode |= 0x10;  // > .5
    if (p.z < -.5) outcode |= 0x20;
    return(outcode);
 }
@@ -71,16 +72,16 @@ long bevel_2d(Point3 p)
 long outcode;
 
    outcode = 0;
-   if ( p.x + p.y > 1.0) outcode |= 0x001;  // > 1.0
-   if ( p.x - p.y > 1.0) outcode |= 0x002;  // > 1.0
+   if ( p.x + p.y >= 1.0) outcode |= 0x001;  // > 1.0
+   if ( p.x - p.y >= 1.0) outcode |= 0x002;  // > 1.0
    if (-p.x + p.y > 1.0) outcode |= 0x004;
    if (-p.x - p.y > 1.0) outcode |= 0x008;
-   if ( p.x + p.z > 1.0) outcode |= 0x010;  // > 1.0
-   if ( p.x - p.z > 1.0) outcode |= 0x020;  // > 1.0
+   if ( p.x + p.z >= 1.0) outcode |= 0x010;  // > 1.0
+   if ( p.x - p.z >= 1.0) outcode |= 0x020;  // > 1.0
    if (-p.x + p.z > 1.0) outcode |= 0x040;
    if (-p.x - p.z > 1.0) outcode |= 0x080;
-   if ( p.y + p.z > 1.0) outcode |= 0x100;  // > 1.0
-   if ( p.y - p.z > 1.0) outcode |= 0x200;  // > 1.0
+   if ( p.y + p.z >= 1.0) outcode |= 0x100;  // > 1.0
+   if ( p.y - p.z >= 1.0) outcode |= 0x200;  // > 1.0
    if (-p.y + p.z > 1.0) outcode |= 0x400;
    if (-p.y - p.z > 1.0) outcode |= 0x800;
    return(outcode);
@@ -95,10 +96,10 @@ long bevel_3d(Point3 p)
 long outcode;
 
    outcode = 0;
-   if (( p.x + p.y + p.z) > 1.5) outcode |= 0x01;  // > 1.5
-   if (( p.x + p.y - p.z) > 1.5) outcode |= 0x02;  // > 1.5
-   if (( p.x - p.y + p.z) > 1.5) outcode |= 0x04;  // > 1.5
-   if (( p.x - p.y - p.z) > 1.5) outcode |= 0x08;  // > 1.5
+   if (( p.x + p.y + p.z) >= 1.5) outcode |= 0x01;  // > 1.5
+   if (( p.x + p.y - p.z) >= 1.5) outcode |= 0x02;  // > 1.5
+   if (( p.x - p.y + p.z) >= 1.5) outcode |= 0x04;  // > 1.5
+   if (( p.x - p.y - p.z) >= 1.5) outcode |= 0x08;  // > 1.5
    if ((-p.x + p.y + p.z) > 1.5) outcode |= 0x10;
    if ((-p.x + p.y - p.z) > 1.5) outcode |= 0x20;
    if ((-p.x - p.y + p.z) > 1.5) outcode |= 0x40;
@@ -160,12 +161,12 @@ Point3 cross12_1p,cross23_2p,cross31_3p;
 /* First, a quick bounding-box test:                               */
 /* If P is outside triangle bbox, there cannot be an intersection. */
 
-   if (p.x > MAX3(t.v1.x, t.v2.x, t.v3.x)) return(OUTSIDE);  
-   if (p.y > MAX3(t.v1.y, t.v2.y, t.v3.y)) return(OUTSIDE);
-   if (p.z > MAX3(t.v1.z, t.v2.z, t.v3.z)) return(OUTSIDE);
-   if (p.x < MIN3(t.v1.x, t.v2.x, t.v3.x)) return(OUTSIDE);
-   if (p.y < MIN3(t.v1.y, t.v2.y, t.v3.y)) return(OUTSIDE);
-   if (p.z < MIN3(t.v1.z, t.v2.z, t.v3.z)) return(OUTSIDE);
+   if (p.x > MAX3(t.v1.x, t.v2.x, t.v3.x) + EPS) return(OUTSIDE);
+   if (p.y > MAX3(t.v1.y, t.v2.y, t.v3.y) + EPS) return(OUTSIDE);
+   if (p.z > MAX3(t.v1.z, t.v2.z, t.v3.z) + EPS) return(OUTSIDE);
+   if (p.x < MIN3(t.v1.x, t.v2.x, t.v3.x) - EPS) return(OUTSIDE);
+   if (p.y < MIN3(t.v1.y, t.v2.y, t.v3.y) - EPS) return(OUTSIDE);
+   if (p.z < MIN3(t.v1.z, t.v2.z, t.v3.z) - EPS) return(OUTSIDE);
 
 /* For each triangle side, make a vector out of it by subtracting vertexes; */
 /* make another vector from one vertex to point P.                          */

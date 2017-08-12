@@ -22,7 +22,7 @@ class Triangle3(Structure):
 
 triangle_lib = None
 script_dir = os.path.dirname(os.path.realpath(__file__))
-file_path_library = os.path.join(script_dir, 'triangleCube.so')
+file_path_library = os.path.join(script_dir, 'triangleCube_unix.so')
 if sys.platform == 'linux' and os.path.exists(file_path_library):
     triangle_lib = cdll.LoadLibrary(file_path_library)
 else:
@@ -36,7 +36,9 @@ else:
 
 INSIDE = 0
 OUTSIDE = 1
-EPS = 10e-5
+EPS = 1e-5
+# EPS = 0.0
+# print(EPS)
 
 
 def cross_product(a, b):
@@ -130,15 +132,15 @@ def face_plane(point):
     @type point: numpy.ndarray | (float, float, float)
     """
     face_plane_code = 0
-    if point[0] > .5:
+    if point[0] >= .5:
         face_plane_code |= 0x01
     if point[0] < -.5:
         face_plane_code |= 0x02
-    if point[1] > .5:
+    if point[1] >= .5:
         face_plane_code |= 0x04
     if point[1] < -.5:
         face_plane_code |= 0x08
-    if point[2] > .5:
+    if point[2] >= .5:
         face_plane_code |= 0x10
     if point[2] < -.5:
         face_plane_code |= 0x20
@@ -151,27 +153,27 @@ def bevel_2d(point):
     Which of the twelve edge plane(s) is point P outside of?
     """
     edge_plane_code = 0
-    if point[0] + point[1] > 1.0:
+    if point[0] + point[1] >= 1.0:
         edge_plane_code |= 0x001
-    if point[0] - point[1] > 1.0:
+    if point[0] - point[1] >= 1.0:
         edge_plane_code |= 0x002
     if -point[0] + point[1] > 1.0:
         edge_plane_code |= 0x004
     if -point[0] - point[1] > 1.0:
         edge_plane_code |= 0x008
 
-    if point[0] + point[2] > 1.0:
+    if point[0] + point[2] >= 1.0:
         edge_plane_code |= 0x010
-    if point[0] - point[2] > 1.0:
+    if point[0] - point[2] >= 1.0:
         edge_plane_code |= 0x020
     if -point[0] + point[2] > 1.0:
         edge_plane_code |= 0x040
     if -point[0] - point[2] > 1.0:
         edge_plane_code |= 0x080
 
-    if point[1] + point[2] > 1.0:
+    if point[1] + point[2] >= 1.0:
         edge_plane_code |= 0x100
-    if point[1] - point[2] > 1.0:
+    if point[1] - point[2] >= 1.0:
         edge_plane_code |= 0x200
     if -point[1] + point[2] > 1.0:
         edge_plane_code |= 0x400
@@ -185,13 +187,13 @@ def bevel_3d(point):
     Which of the eight corner plane(s) is point P outside of?
     """
     corner_plane_code = 0
-    if (point[0] + point[1] + point[2]) > 1.5:
+    if (point[0] + point[1] + point[2]) >= 1.5:
         corner_plane_code |= 0x01
-    if (point[0] + point[1] - point[2]) > 1.5:
+    if (point[0] + point[1] - point[2]) >= 1.5:
         corner_plane_code |= 0x02
-    if (point[0] - point[1] + point[2]) > 1.5:
+    if (point[0] - point[1] + point[2]) >= 1.5:
         corner_plane_code |= 0x04
-    if (point[0] - point[1] - point[2]) > 1.5:
+    if (point[0] - point[1] - point[2]) >= 1.5:
         corner_plane_code |= 0x08
     if (-point[0] + point[1] + point[2]) > 1.5:
         corner_plane_code |= 0x10
@@ -250,22 +252,25 @@ def point_triangle_intersection(p, t):
     """
     Test if 3D point is inside 3D triangle
 
+    @type p: list[float]
     @type t: Triangle
     """
     # /* First, a quick bounding-box test:                               */
     # /* If P is outside triangle bbox, there cannot be an intersection. */
 
-    if p[0] > t.max(0):
+    # add/sub EPS as buffer to avoid an floating point issue
+
+    if p[0] > t.max(0) + EPS:
         return OUTSIDE
-    if p[1] > t.max(1):
+    if p[1] > t.max(1) + EPS:
         return OUTSIDE
-    if p[2] > t.max(2):
+    if p[2] > t.max(2) + EPS:
         return OUTSIDE
-    if p[0] < t.min(0):
+    if p[0] < t.min(0) - EPS:
         return OUTSIDE
-    if p[1] < t.min(1):
+    if p[1] < t.min(1) - EPS:
         return OUTSIDE
-    if p[2] < t.min(2):
+    if p[2] < t.min(2) - EPS:
         return OUTSIDE
 
     # /* For each triangle side, make a vector out of it by subtracting vertexes; */
@@ -274,36 +279,24 @@ def point_triangle_intersection(p, t):
     # /* signs of its X,Y,Z components indicate whether P was to the inside or    */
     # /* to the outside of this triangle side.                                    */
 
-    # SUB(t.v1, t.v2, vect12)
     vect12 = np.subtract(t.v1, t.v2)
-    # SUB(t.v1,    p, vect1h);
     vect1h = np.subtract(t.v1, p)
-    # CROSS(vect12, vect1h, cross12_1p)
     cross12_1p = cross_product(vect12, vect1h)
-    # sign12 = SIGN3(cross12_1p);      # /* Extract X,Y,Z signs as 0..7 or 0...63 integer */
-    sign12 = sign3(cross12_1p)
+    sign12 = sign3(cross12_1p)  # /* Extract X,Y,Z signs as 0..7 or 0...63 integer */
 
-    # SUB(t.v2, t.v3, vect23)
     vect23 = np.subtract(t.v2, t.v3)
-    # SUB(t.v2,    p, vect2h);
     vect2h = np.subtract(t.v2, p)
-    # CROSS(vect23, vect2h, cross23_2p)
     cross23_2p = cross_product(vect23, vect2h)
-    # sign23 = SIGN3(cross23_2p);
     sign23 = sign3(cross23_2p)
 
-    # SUB(t.v3, t.v1, vect31)
     vect31 = np.subtract(t.v3, t.v1)
-    # SUB(t.v3,    p, vect3h);
     vect3h = np.subtract(t.v3, p)
-    # CROSS(vect31, vect3h, cross31_3p)
     cross31_3p = cross_product(vect31, vect3h)
-    # sign31 = SIGN3(cross31_3p);
     sign31 = sign3(cross31_3p)
 
-    # /* If all three crossproduct vectors agree in their component signs,  */
-    # /* then the point must be inside all three.                           */
-    # /* P cannot be OUTSIDE all three sides simultaneously.                */
+    # /* If all three cross product vectors agree in their component signs,  */
+    # /* then the point must be inside all three.                            */
+    # /* P cannot be OUTSIDE all three sides simultaneously.                 */
 
     if (sign12 & sign23 & sign31) == 0:
         return OUTSIDE
@@ -392,11 +385,8 @@ def t_c_intersection(triangle):
     # /* To find plane of the triangle, first perform crossproduct on  */
     # /* two triangle side vectors to compute the normal vector.       */
 
-    # SUB(t.vertex_1,t.vertex_2,vect12);
     vect12 = np.subtract(triangle.v1, triangle.v2)
-    # SUB(t.vertex_1,t.vertex_3,vect13);
     vect13 = np.subtract(triangle.v1, triangle.v3)
-    # CROSS(vect12,vect13,norm)
     norm = cross_product(vect12, vect13)
 
     # /* The normal vector "norm" X,Y,Z components are the coefficients */
