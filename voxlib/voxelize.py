@@ -65,6 +65,9 @@ class BoundaryBox(object):
             self.maximum[2] = math.ceil(max([vertex_1[2], vertex_2[2], vertex_3[2], self.maximum[2]]))
 
 
+n_range = {-1, 0, 1}
+
+
 def get_intersecting_voxels_depth_first(vertex_1, vertex_2, vertex_3):
     """
 
@@ -79,8 +82,13 @@ def get_intersecting_voxels_depth_first(vertex_1, vertex_2, vertex_3):
     searched = set()
     stack = set()
 
-    seed = int(vertex_1[0]), int(vertex_1[1]), int(vertex_1[2])
-    stack.add(seed)
+    seed = (int(vertex_1[0]), int(vertex_1[1]), int(vertex_1[2]))
+    for x in n_range:
+        for y in n_range:
+            for z in n_range:
+                neighbour = (seed[0] + x, seed[1] + y, seed[2] + z)
+                if neighbour not in searched:
+                    stack.add(neighbour)
 
     tmp = np.array([0.0, 0.0, 0.0])
     tmp_vertex_1 = np.array([0.0, 0.0, 0.0])
@@ -175,7 +183,7 @@ def voxelize(file_path, resolution, progress_bar=None):
     center = bounding_box.get_center()
     while len(voxels) > 0:
         (x, y, z) = voxels.pop()
-        yield x-center[0], z-center[2], -1 * (y-center[1])
+        yield x-center[0], y-center[1], z-center[2]
 
 
 if __name__ == '__main__':
