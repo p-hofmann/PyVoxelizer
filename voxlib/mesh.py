@@ -21,7 +21,7 @@ def get_scale_and_shift(mesh, resolution):
             if point[index] > maxs[index]:
                 maxs[index] = point[index]
     shift = [-minimum for minimum in mins]
-    scale = float(resolution - 1) / (max(maxs[0] - mins[0], maxs[1] - mins[1]))
+    scale = float(resolution - 1) / (max(maxs[0] - mins[0], maxs[1] - mins[1], maxs[2] - mins[2]))
     return scale, shift, triangle_count
 
 
