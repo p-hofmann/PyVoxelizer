@@ -31,6 +31,10 @@ try:
         file_path_library = os.path.join(script_dir, 'triangleCube_win32.so')
         if os.path.exists(file_path_library):
             triangle_lib = cdll.LoadLibrary(file_path_library)
+    elif sys.platform.startswith("win") and sys.maxsize == 9223372036854775807:
+        file_path_library = os.path.join(script_dir, 'triangleCube_win64.so')
+        if os.path.exists(file_path_library):
+            triangle_lib = cdll.LoadLibrary(file_path_library)
 except OSError:
     triangle_lib = None
 
