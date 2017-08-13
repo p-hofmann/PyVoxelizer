@@ -32,7 +32,7 @@ def scale_and_shift_triangle(triangle, scale, shift):
     @type scale: float
     @type shift: list[float
 
-    @rtype: list[(float, float, float)] | None
+    @rtype: list[np.ndarray]
     """
     shifted_triangle = []
     for point in triangle:

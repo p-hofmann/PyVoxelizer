@@ -169,6 +169,8 @@ def voxelize(file_path, resolution, progress_bar=None):
     """
     if not progress_bar:
         progress_bar = print_progress_bar
+
+    # read triangle positions from file
     mesh_reader = MeshReader()
     if file_path.endswith('.zip'):
         mesh_reader.read_archive(file_path)
@@ -176,23 +178,28 @@ def voxelize(file_path, resolution, progress_bar=None):
         mesh_reader.read(file_path)
     if not mesh_reader.has_triangular_facets():
         raise NotImplementedError("Unsupported polygonal face elements. Only triangular facets supported.")
-
     list_of_triangles = list(mesh_reader.get_facets())
+
+    # move mesh to origin and then scale it to fit resolution
     scale, shift, triangle_count = get_scale_and_shift(list_of_triangles, resolution)
+    for index, triangle in enumerate(list_of_triangles):
+        list_of_triangles[index] = scale_and_shift_triangle(triangle, scale, shift)
+
+    # find voxels for each facet
     progress_counter = 0
-    voxels = set()
+    dict_voxels = {}
     bounding_box = BoundaryBox()
-    for triangle in list_of_triangles:
+    for index, (vertex_1, vertex_2, vertex_3) in enumerate(list_of_triangles):
         progress_counter += 1
         progress_bar(progress_counter, triangle_count, prefix="Voxelize: ")
-
-        (vertex_1, vertex_2, vertex_3) = scale_and_shift_triangle(triangle, scale, shift)
         bounding_box.from_vertexes(vertex_1, vertex_2, vertex_3)
-        voxels.update(get_intersecting_voxels_depth_first(vertex_1, vertex_2, vertex_3))
+        dict_voxels[index] = get_intersecting_voxels_depth_first(vertex_1, vertex_2, vertex_3)
+
+    # output one position at a time
     center = bounding_box.get_center()
-    while len(voxels) > 0:
-        (x, y, z) = voxels.pop()
-        yield x-center[0], y-center[1], z-center[2]
+    for key, voxels in dict_voxels.items():
+        for (x, y, z) in voxels:
+            yield x-center[0], y-center[1], z-center[2]
 
 
 if __name__ == '__main__':
