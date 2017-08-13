@@ -5,6 +5,7 @@ import numpy as np
 
 from .common.progressbar import print_progress_bar
 from meshlib.meshreader import MeshReader
+from meshlib.mtlreader import MtlReader
 from .voxelintersect.triangle import Triangle, t_c_intersection, INSIDE, vertexes_to_c_triangle, triangle_lib
 
 
@@ -211,6 +212,7 @@ class Voxelizer(object):
 
         @type file_path: str
         @type resolution: int
+        @type color_list: list[(float, float, float, float)]
         @type progress_bar: any
         """
         if not progress_bar:
@@ -227,7 +229,9 @@ class Voxelizer(object):
         list_of_triangles = list(mesh_reader.get_facets())
 
         # get textures if available
-        # todo
+        if color_list is not None:
+            print("_paint_voxels")
+            Voxelizer._paint_voxels(mesh_reader, list_of_triangles, color_list)
 
         # move mesh to origin and then scale it to fit resolution
         scale, shift, triangle_count = Voxelizer._get_scale_and_shift(list_of_triangles, resolution)
@@ -250,6 +254,43 @@ class Voxelizer(object):
             for (x, y, z) in voxels:
                 yield x-center[0], y-center[1], z-center[2]
 
+    @staticmethod
+    def _paint_voxels(mesh_reader, list_of_triangles, color_list):
+        # from PIL import Image
+        # im = Image.open("dead_parrot.jpg")  # Can be many different formats.
+        # pix = im.load()
+        # im.size  # Get the width and hight of the image for iterating over
+        # pix[x, y]  # Get the RGBA Value of the a pixel of an image
+        directury_textures = mesh_reader.get_directory_textures()
+        if not directury_textures:
+            # No available textures
+            print("No available textures")
+            return None
+        mtl_reader = MtlReader()
+        file_path_material_library_current = None
+        for texture_triangle, material_name, file_path_material_library in mesh_reader.get_texture_facets():
+            if material_name is None:
+                # facet without material assigned
+                continue
+            if not file_path_material_library:
+                file_path_material_library = mesh_reader.get_file_path()
+            if file_path_material_library_current != file_path_material_library:
+                file_path_material_library_current = file_path_material_library
+                success_failure = mtl_reader.read(file_path_material_library_current, directury_textures)
+                if not mtl_reader.validate_textures():
+                    # texture paths are invalid
+                    print("Texture paths are invalid")
+                    return None
+                if success_failure and success_failure[1] > 1:
+                    # library reconstruction failed
+                    print("Library reconstruction failed")
+                    return None
+            file_path_material = mtl_reader.get_file_path(material_name)
+            if not file_path_material:
+                # unknown file apth
+                print("Unknown file path: '{}'".format(material_name))
+                continue
+            # print(file_path_material)
 
 if __name__ == '__main__':
     # parse cli args
