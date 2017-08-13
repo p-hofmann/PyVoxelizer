@@ -118,6 +118,8 @@ def get_intersecting_voxels_depth_first(vertex_1, vertex_2, vertex_3):
                 is_inside = t_c_intersection(tmp_triangle) == INSIDE
         except Exception:
             c_lib = None
+            tmp_triangle = Triangle()
+            tmp_triangle.set(tmp_vertex_1, tmp_vertex_2, tmp_vertex_3)
             is_inside = t_c_intersection(tmp_triangle) == INSIDE
 
         if is_inside:
