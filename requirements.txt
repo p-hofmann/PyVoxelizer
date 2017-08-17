@@ -1,4 +1,4 @@
 numpy>=1.12.1
 git+https://github.com/p-hofmann/MeshReader.git#egg=meshlib
 meshlib>=0.0.2
-pillow
+pillow>=4.2.1

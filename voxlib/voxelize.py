@@ -1,68 +1,11 @@
 import argparse
 import sys
-import math
 import numpy as np
 
-from .common.progressbar import print_progress_bar
 from meshlib.meshreader import MeshReader
-from meshlib.mtlreader import MtlReader
+from .boundarybox import BoundaryBox
+from .common.progressbar import print_progress_bar
 from .voxelintersect.triangle import Triangle, t_c_intersection, INSIDE, vertexes_to_c_triangle, triangle_lib
-
-
-class BoundaryBox(object):
-    """
-    @type minimum: list[int]
-    @type maximum: list[int]
-    """
-
-    minimum = None
-    maximum = None
-
-    def get_center(self):
-        assert self.minimum, "BoundaryBox not initialized"
-        return [
-            int((self.maximum[0] + self.minimum[0])/2.0),
-            int((self.maximum[1] + self.minimum[1])/2.0),
-            int((self.maximum[2] + self.minimum[2])/2.0)
-            ]
-
-    def from_triangle(self, triangle):
-        """
-        @type triangle: Triangle
-        """
-        self.minimum[0] = math.floor(triangle.min(0))
-        self.minimum[1] = math.floor(triangle.min(1))
-        self.minimum[2] = math.floor(triangle.min(2))
-
-        self.maximum[0] = math.ceil(triangle.max(0))
-        self.maximum[1] = math.ceil(triangle.max(1))
-        self.maximum[2] = math.ceil(triangle.max(2))
-
-    def from_vertexes(self, vertex_1, vertex_2, vertex_3):
-        """
-        @type vertex_1: (float, float, float)
-        @type vertex_2: (float, float, float)
-        @type vertex_3: (float, float, float)
-        """
-        if self.minimum is None:
-            self.minimum = [0, 0, 0]
-            self.maximum = [0, 0, 0]
-
-            self.minimum[0] = math.floor(min([vertex_1[0], vertex_2[0], vertex_3[0]]))
-            self.minimum[1] = math.floor(min([vertex_1[1], vertex_2[1], vertex_3[1]]))
-            self.minimum[2] = math.floor(min([vertex_1[2], vertex_2[2], vertex_3[2]]))
-
-            self.maximum[0] = math.ceil(max([vertex_1[0], vertex_2[0], vertex_3[0]]))
-            self.maximum[1] = math.ceil(max([vertex_1[1], vertex_2[1], vertex_3[1]]))
-            self.maximum[2] = math.ceil(max([vertex_1[2], vertex_2[2], vertex_3[2]]))
-        else:
-            self.minimum[0] = math.floor(min([vertex_1[0], vertex_2[0], vertex_3[0], self.minimum[0]]))
-            self.minimum[1] = math.floor(min([vertex_1[1], vertex_2[1], vertex_3[1], self.minimum[1]]))
-            self.minimum[2] = math.floor(min([vertex_1[2], vertex_2[2], vertex_3[2], self.minimum[2]]))
-
-            self.maximum[0] = math.ceil(max([vertex_1[0], vertex_2[0], vertex_3[0], self.maximum[0]]))
-            self.maximum[1] = math.ceil(max([vertex_1[1], vertex_2[1], vertex_3[1], self.maximum[1]]))
-            self.maximum[2] = math.ceil(max([vertex_1[2], vertex_2[2], vertex_3[2], self.maximum[2]]))
 
 
 class Voxelizer(object):
@@ -228,14 +171,12 @@ class Voxelizer(object):
             raise NotImplementedError("Unsupported polygonal face elements. Only triangular facets supported.")
         list_of_triangles = list(mesh_reader.get_facets())
 
-        # get textures if available
-        if color_list is not None:
-            print("_paint_voxels")
-            Voxelizer._paint_voxels(mesh_reader, list_of_triangles, color_list)
-
         # move mesh to origin and then scale it to fit resolution
         scale, shift, triangle_count = Voxelizer._get_scale_and_shift(list_of_triangles, resolution)
         for index, triangle in enumerate(list_of_triangles):
+            # if index == 118:
+            #     print(triangle, scale, shift)
+            #     return
             list_of_triangles[index] = Voxelizer._shift_and_scale_triangle(triangle, scale, shift)
 
         # find voxels for each facet
@@ -248,49 +189,32 @@ class Voxelizer(object):
             bounding_box.from_vertexes(vertex_1, vertex_2, vertex_3)
             dict_voxels[index] = Voxelizer._get_intersecting_voxels_depth_first(vertex_1, vertex_2, vertex_3)
 
+            # center = (
+            #     int((vertex_1[0] + vertex_2[0] + vertex_3[0]) / 3.),
+            #     int((vertex_1[1] + vertex_2[1] + vertex_3[1]) / 3.),
+            #     int((vertex_1[2] + vertex_2[2] + vertex_3[2]) / 3.)
+            #     )
+            # assert center in dict_voxels[index], index
+
+        # get textures if available
+        dict_colors = None
+        if color_list is not None:
+            if None in color_list:
+                color_list.remove(None)
+            from .voxelpainter import VoxelPainter
+            dict_colors = VoxelPainter.paint_voxels(mesh_reader, list_of_triangles, dict_voxels, color_list, progress_bar)
+
         # output one position at a time
         center = bounding_box.get_center()
         for key, voxels in dict_voxels.items():
-            for (x, y, z) in voxels:
-                yield x-center[0], y-center[1], z-center[2]
-
-    @staticmethod
-    def _paint_voxels(mesh_reader, list_of_triangles, color_list):
-        # from PIL import Image
-        # im = Image.open("dead_parrot.jpg")  # Can be many different formats.
-        # pix = im.load()
-        # im.size  # Get the width and hight of the image for iterating over
-        # pix[x, y]  # Get the RGBA Value of the a pixel of an image
-        directury_textures = mesh_reader.get_directory_textures()
-        if not directury_textures:
-            # No available textures
-            print("No available textures")
-            return None
-        mtl_reader = MtlReader()
-        file_path_material_library_current = None
-        for texture_triangle, material_name, file_path_material_library in mesh_reader.get_texture_facets():
-            if material_name is None:
-                # facet without material assigned
-                continue
-            if not file_path_material_library:
-                file_path_material_library = mesh_reader.get_file_path()
-            if file_path_material_library_current != file_path_material_library:
-                file_path_material_library_current = file_path_material_library
-                success_failure = mtl_reader.read(file_path_material_library_current, directury_textures)
-                if not mtl_reader.validate_textures():
-                    # texture paths are invalid
-                    print("Texture paths are invalid")
-                    return None
-                if success_failure and success_failure[1] > 1:
-                    # library reconstruction failed
-                    print("Library reconstruction failed")
-                    return None
-            file_path_material = mtl_reader.get_file_path(material_name)
-            if not file_path_material:
-                # unknown file apth
-                print("Unknown file path: '{}'".format(material_name))
-                continue
-            # print(file_path_material)
+            for index, (x, y, z) in enumerate(voxels):
+                if dict_colors:
+                    try:
+                        yield (x - center[0], y - center[1], z - center[2]), dict_colors[key][index]
+                    except (KeyError, TypeError):
+                        yield (x - center[0], y - center[1], z - center[2]), None
+                else:
+                    yield (x - center[0], y - center[1], z - center[2])
 
 if __name__ == '__main__':
     # parse cli args
