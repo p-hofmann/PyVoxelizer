@@ -7,10 +7,43 @@ from meshlib.mtlreader import MtlReader
 
 class VoxelPainter(object):
 
+    transparent = (0, 0, 0, 0)
+
+    @staticmethod
+    def get_palette(color_list):
+        """
+
+        @type file_path: str
+        @param color_list: list[(int, int, int)]
+        @return: pixel_map
+        """
+        from PIL import Image
+        palette_image= Image.new("P", (1, 1))
+        number_of_colors = len(color_list)
+        array_of_colors = tuple([value for rgb in color_list for value in rgb])
+        palette_image.putpalette(array_of_colors + (0, 0, 0) * (256 - number_of_colors))
+        return palette_image
+
+    @staticmethod
+    def get_image(file_path, palette):
+        """
+
+        @type file_path: str
+        @param palette: PIL.Image
+        @return: pixel_map
+        """
+        from PIL import Image
+        image_material_texture = Image.open(file_path)
+        if image_material_texture.mode != "RGB":
+            image_material_texture = image_material_texture.convert('RGB')
+
+        image_material_texture = image_material_texture.quantize(palette=palette).convert('RGB')
+        return image_material_texture
+
     @staticmethod
     def paint_voxels(mesh_reader, list_of_triangles, dict_voxels, color_list, progress_bar):
+        palette = VoxelPainter.get_palette(color_list)
         unknown_material = None
-        from PIL import Image
         dict_colors = {}
         image_material_texture = None
         pixel_map = None
@@ -64,15 +97,11 @@ class VoxelPainter(object):
                 continue
             if file_path_material_current != material_texture.file_path:
                 file_path_material_current = material_texture.file_path
-                image_material_texture = Image.open(material_texture.file_path)
-                # print("Mode:", image_material_texture.mode)
-                # print("Palette:", image_material_texture.palette.getcolor())
-                if image_material_texture.mode != "RGB":
-                    image_material_texture = image_material_texture.convert('RGB')
-                    # raise RuntimeError("Unknown image mode: {}".format(image_material_texture.mode))
+                image_material_texture = VoxelPainter.get_image(material_texture.file_path, palette)
                 pixel_map = image_material_texture.load()
+
             dict_colors[progress_counter-1] = VoxelPainter.paint_triangle(
-                color_list, list_of_triangles[progress_counter-1], texture_triangle, dict_voxels[progress_counter-1],
+                list_of_triangles[progress_counter-1], texture_triangle, dict_voxels[progress_counter-1],
                 material, image_material_texture.size, pixel_map)
         return dict_colors
 
@@ -100,7 +129,7 @@ class VoxelPainter(object):
             )
 
     @staticmethod
-    def paint_triangle(color_list, triangle, texture_triangle, list_of_voxels, material, size, pixel_map):
+    def paint_triangle(triangle, texture_triangle, list_of_voxels, material, size, pixel_map):
         # todo: stretch and move origin with 'material_texture'
 
         list_of_rgb = []
@@ -108,22 +137,17 @@ class VoxelPainter(object):
         for voxel in list_of_voxels:
             u, v = VoxelPainter.position_to_uv(triangle, voxel, texture_triangle)
             if not VoxelPainter.point_in_triangle([u, v], texture_triangle):
-                list_of_rgb.append(None)
+                list_of_rgb.append(VoxelPainter.transparent)
                 continue
             xy_position[0] = int(math.floor((u % 1) * (size[0]-1)))
             xy_position[1] = int(math.floor((1-(v % 1)) * (size[1]-1)))
             # print(xy_position, size)
             pixel_color = pixel_map[xy_position[0], xy_position[1]]
             # print(xy_position, pixel_color)
-            minimum_distance = 999
-            voxel_color = (1.0, 1.0, 1.0, 0.0)
-            for color in color_list:
-                new_distance = VoxelPainter.color_distance(
-                    color,
-                    (pixel_color[0]/255.0, pixel_color[1]/255.0, pixel_color[2]/255.0, material.d))
-                if minimum_distance > new_distance:
-                    minimum_distance = new_distance
-                    voxel_color = color
+            if material.d == 1:
+                voxel_color = pixel_color + (255,)
+            else:
+                voxel_color = pixel_color + (127,)
             list_of_rgb.append(voxel_color)
             # print(xy_position, pixel_color, voxel_color)
         return list_of_rgb
