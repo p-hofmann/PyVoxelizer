@@ -34,9 +34,9 @@
 #define OUTSIDE 1
 
 typedef struct {
-      float           x;
-      float           y;
-      float           z;
+      long double           x;
+      long double           y;
+      long double           z;
       } Point3;
 
 typedef struct{
@@ -113,7 +113,7 @@ long outcode;
 /* See if it is on a face of the cube              */
 /* Consider only faces in "mask"                   */
 
-long check_point(Point3 p1, Point3 p2, float alpha, long mask)
+long check_point(Point3 p1, Point3 p2, long double alpha, long mask)
 {
 Point3 plane_point;
 
@@ -218,7 +218,7 @@ Point3 cross12_1p,cross23_2p,cross31_3p;
 long t_c_intersection(Triangle3 t)
 {
 long v1_test,v2_test,v3_test;
-float d,denom;
+long double d,denom;
 Point3 vect12,vect13,norm;
 Point3 hitpp,hitpn,hitnp,hitnn;
 
