@@ -208,7 +208,7 @@ class Voxelizer(object):
         center = bounding_box.get_center()
         for key, voxels in dict_voxels.items():
             for index, (x, y, z) in enumerate(voxels):
-                if dict_colors:
+                if dict_colors is None:
                     try:
                         yield (x - center[0], y - center[1], z - center[2]), dict_colors[key][index]
                     except (KeyError, TypeError):
