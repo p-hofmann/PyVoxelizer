@@ -13,9 +13,8 @@ class VoxelPainter(object):
     def get_palette(color_list):
         """
 
-        @type file_path: str
         @param color_list: list[(int, int, int)]
-        @return: pixel_map
+        @return: palette_image
         """
         from PIL import Image
         palette_image= Image.new("P", (1, 1))
@@ -30,13 +29,17 @@ class VoxelPainter(object):
 
         @type file_path: str
         @param palette: PIL.Image
-        @return: pixel_map
+        @return: image
         """
-        from PIL import Image
+        from PIL import Image, ImageFilter
         image_material_texture = Image.open(file_path)
         if image_material_texture.mode != "RGB":
             image_material_texture = image_material_texture.convert('RGB')
-
+        size = 3
+        # max_rank = size * size - 1
+        for _ in range(5):
+            image_material_texture = image_material_texture.quantize(palette=palette).convert('RGB')
+            image_material_texture = image_material_texture.filter(ImageFilter.MedianFilter(size=size))
         image_material_texture = image_material_texture.quantize(palette=palette).convert('RGB')
         return image_material_texture
 

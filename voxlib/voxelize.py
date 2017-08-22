@@ -6,6 +6,7 @@ from meshlib.meshreader import MeshReader
 from .boundarybox import BoundaryBox
 from .common.progressbar import print_progress_bar
 from .voxelintersect.triangle import Triangle, t_c_intersection, INSIDE, vertexes_to_c_triangle, triangle_lib
+from .voxelpainter import VoxelPainter
 
 
 class Voxelizer(object):
@@ -201,8 +202,8 @@ class Voxelizer(object):
         if color_list is not None:
             if None in color_list:
                 color_list.remove(None)
-            from .voxelpainter import VoxelPainter
-            dict_colors = VoxelPainter.paint_voxels(mesh_reader, list_of_triangles, dict_voxels, color_list, progress_bar)
+            dict_colors = VoxelPainter.paint_voxels(
+                mesh_reader, list_of_triangles, dict_voxels, color_list, progress_bar)
 
         # output one position at a time
         center = bounding_box.get_center()
@@ -212,7 +213,7 @@ class Voxelizer(object):
                     try:
                         yield (x - center[0], y - center[1], z - center[2]), dict_colors[key][index]
                     except (KeyError, TypeError):
-                        yield (x - center[0], y - center[1], z - center[2]), None
+                        yield (x - center[0], y - center[1], z - center[2]), VoxelPainter.transparent
                 else:
                     yield (x - center[0], y - center[1], z - center[2])
 
